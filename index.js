@@ -80,14 +80,16 @@ const run = async () => {
       res.send(result)
     })
     // user
-    app.put('/users', async(req, res)=>{
+    app.put('/users/:email', async(req, res)=>{
       const email = req.params.email;
+      const user = req.body
       const filter = {email: email}
+      console.log(filter)
       const option = {upsert: true}
       const updateDoc = {
         $set: user,
       }
-      const result = await userCollection.updateOne(filter, updateOne, option)
+      const result = await userCollection.updateOne(filter, updateDoc, option)
       res.send(result)
     })
   } finally {
