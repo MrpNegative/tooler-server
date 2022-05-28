@@ -27,6 +27,8 @@ const run = async () => {
     console.log("mongoConnected");
     const toolerCollection = client.db("tooler").collection("tools");
     const orderCollection = client.db("tooler").collection("order");
+    const userCollection = client.db("tooler").collection("user");
+    const reviewCollection = client.db("tooler").collection("review");
     
     app.get('/tools', async(req, res)=>{
         const result = await toolerCollection.find({}).toArray()
@@ -59,6 +61,33 @@ const run = async () => {
     app.post('/order', async(req, res)=>{
       const order = req.body;
       const result = await orderCollection.insertOne(order)
+      res.send(result)
+    })
+    // get order 
+    app.get('/order', async (req,res)=>{
+      const result = await orderCollection.find({}).toArray()
+      res.send(result)
+    })
+    // review 
+    app.post('/review', async(req, res)=>{
+      const order = req.body;
+      const result = await reviewCollection.insertOne(order)
+      res.send(result)
+    })
+    // get review 
+    app.get('/review', async (req,res)=>{
+      const result = await reviewCollection.find({}).toArray()
+      res.send(result)
+    })
+    // user
+    app.put('/users', async(req, res)=>{
+      const email = req.params.email;
+      const filter = {email: email}
+      const option = {upsert: true}
+      const updateDoc = {
+        $set: user,
+      }
+      const result = await userCollection.updateOne(filter, updateOne, option)
       res.send(result)
     })
   } finally {
