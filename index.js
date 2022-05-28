@@ -116,6 +116,11 @@ const run = async () => {
       res.send(fullResult);
       }
     });
+    // get users 
+    app.get("/tools", verifyJWT, async (req, res) => {;
+      const result = await toolerCollection.find({}).toArray();
+      res.send(result);
+    });
   } finally {
     //lkj
   }
