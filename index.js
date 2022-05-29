@@ -86,6 +86,13 @@ const run = async () => {
       const result = await orderCollection.find(filter).toArray();
       res.send(result);
     });
+    // delete order by id
+    app.delete("/order/:id",  async (req, res) => {
+      const id = req.params.id
+      const filter = {_id: ObjectId(id)}
+      const result = await orderCollection.deleteOne(filter);
+      res.send(result);
+    });
     // review
     app.post("/review", async (req, res) => {
       const order = req.body;
@@ -110,17 +117,36 @@ const run = async () => {
       };
       const result = await userCollection.updateOne(filter, updateDoc, option);
       const token = jwt.sign({ email: email }, process.env.DB_ACCESS_TOKEN, {
-        expiresIn: "1h",
+        expiresIn: "1d",
       });
       const fullResult = { result, token };
       res.send(fullResult);
       }
     });
     // get users 
-    app.get("/tools", verifyJWT, async (req, res) => {;
-      const result = await toolerCollection.find({}).toArray();
+    app.get("/users", verifyJWT, async (req, res) => {;
+      const result = await userCollection.find({}).toArray();
       res.send(result);
     });
+    // set user role 
+    app.put('/users/role/:email', async (req, res)=>{
+      const email = req.params.email;
+      console.log(email);
+      const filter = {email: email}
+      const updateDoc = {
+        $set: {role: 'admin'}
+      }
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+    // Delete User
+    app.delete('/users/delete/:email', async (req, res)=>{
+      const email = req.params.email;
+      console.log(email);
+      const filter = {email: email}
+      const result = await userCollection.deleteOne(filter);
+      res.send(result)
+    })
   } finally {
     //lkj
   }
