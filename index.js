@@ -45,6 +45,17 @@ const run = async () => {
     const userCollection = client.db("tooler").collection("user");
     const reviewCollection = client.db("tooler").collection("review");
 
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({ email: requester });
+      if (requesterAccount.role === 'admin') {
+        next();
+      }
+      else {
+        res.status(403).send({ message: 'forbidden' });
+      }
+    }
+
     app.get("/tools", async (req, res) => {
       const result = await toolerCollection.find({}).toArray();
       res.send(result);
@@ -152,15 +163,11 @@ const run = async () => {
       res.send(result);
     });
     // set user role
-    app.put("/users/role/:email", async (req, res) => {
+    app.put("/users/role/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const theEmail = req.params.email;
-      // const admin = req.decoded;
-      // console.log(theEmail, admin);
-      // const requestAccount = await userCollection.findOne({ email: admin });
-      // console.log(requestAccount);
-      // if (requestAccount.role === "admin") {
-      console.log(theEmail);
-      const filter = { email: theEmail };
+
+      const email = req.params.email;
+      const filter = { email: email };
       const updateDoc = {
         $set: { role: "admin" },
       };
@@ -209,7 +216,9 @@ const run = async () => {
     app.post("/create-payment-intent", async (req, res) => {
       const service = req.body;
       const totalPrice = service.price;
+      console.log('total', totalPrice);
       const amount = totalPrice * 100;
+      console.log('amount', amount);
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
