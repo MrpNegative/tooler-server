@@ -114,6 +114,25 @@ const run = async () => {
       const result = await orderCollection.findOne(filter);
       res.send(result);
     });
+    // put
+    app.put("/order/paid/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const updateItem = req?.body;
+      console.log(updateItem);
+      const option = { upsert: true };
+      const updateDoc = {
+        $set: {
+          paid: updateItem?.transationId,
+        },
+      };
+      const result = await orderCollection.updateOne(query, updateDoc, option);
+      res.send(result);
+    });
+
+//
+//
+//
     // review
     app.post("/review", async (req, res) => {
       const order = req.body;
@@ -165,7 +184,6 @@ const run = async () => {
     // set user role
     app.put("/users/role/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const theEmail = req.params.email;
-
       const email = req.params.email;
       const filter = { email: email };
       const updateDoc = {
@@ -173,9 +191,7 @@ const run = async () => {
       };
       const result = await userCollection.updateOne(filter, updateDoc);
       res.send(result);
-      //   return;
-      // }
-      // res.status(403).send({ scam: true });
+
     });
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
