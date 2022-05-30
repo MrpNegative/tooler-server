@@ -5,6 +5,7 @@ const cors = require("cors");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const stripe = require('stripe')(process.env.DB_SK_KEY);
 
 // medal ware
 app.use(express.json());
@@ -23,7 +24,7 @@ const verifyJWT = (req, res, next) => {
       return res.status(403).send({ scam: true });
     }
     req.decoded = decoded;
-    console.log('decoded',decoded);
+    console.log("decoded", decoded);
     next();
   });
 };
@@ -95,7 +96,7 @@ const run = async () => {
       const result = await orderCollection.deleteOne(filter);
       res.send(result);
     });
-    // get order by id 
+    // get order by id
     app.get("/order/get/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
@@ -158,13 +159,13 @@ const run = async () => {
       // const requestAccount = await userCollection.findOne({ email: admin });
       // console.log(requestAccount);
       // if (requestAccount.role === "admin") {
-        console.log(theEmail);
-        const filter = { email: theEmail };
-        const updateDoc = {
-          $set: { role: "admin" },
-        };
-        const result = await userCollection.updateOne(filter, updateDoc);
-        res.send(result);
+      console.log(theEmail);
+      const filter = { email: theEmail };
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
       //   return;
       // }
       // res.status(403).send({ scam: true });
@@ -203,6 +204,18 @@ const run = async () => {
       const email = req.params.email;
       const result = await userCollection.findOne({ email: email });
       res.send(result);
+    });
+    // payment intent 
+    app.post("/create-payment-intent", async (req, res) => {
+      const service = req.body;
+      const totalPrice = service.price;
+      const mainTotalPrice = totalPrice * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        mainTotalPrice: mainTotalPrice,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({ clientSecret: paymentIntent.client_secret });
     });
   } finally {
     //lkj
