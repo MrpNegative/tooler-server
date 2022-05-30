@@ -13,6 +13,7 @@ app.use(cors());
 // middle tiear
 const verifyJWT = (req, res, next) => {
   const authH = req.headers.authorization;
+  console.log(authH);
   if (!authH) {
     return res.status(401).send({ scam: true });
   }
@@ -22,6 +23,7 @@ const verifyJWT = (req, res, next) => {
       return res.status(403).send({ scam: true });
     }
     req.decoded = decoded;
+    console.log('decoded',decoded);
     next();
   });
 };
@@ -46,7 +48,7 @@ const run = async () => {
       const result = await toolerCollection.find({}).toArray();
       res.send(result);
     });
-    // find by id
+    // find tools by id
     app.get("/tools/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -93,6 +95,13 @@ const run = async () => {
       const result = await orderCollection.deleteOne(filter);
       res.send(result);
     });
+    // get order by id 
+    app.get("/order/get/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await orderCollection.findOne(filter);
+      res.send(result);
+    });
     // review
     app.post("/review", async (req, res) => {
       const order = req.body;
@@ -112,7 +121,6 @@ const run = async () => {
     //
     //
     //
-
 
     // user
     app.put("/users/:email", async (req, res) => {
@@ -143,21 +151,23 @@ const run = async () => {
       res.send(result);
     });
     // set user role
-    app.put("/users/role/:email", verifyJWT, async (req, res) => {
-      const email = req.params.email;
-      const admin = req.decoded.email;
-      const requestAccount = await userCollection.findOne({ email: admin });
-      if (requestAccount.role == "admin") {
-        console.log(email);
-        const filter = { email: email };
+    app.put("/users/role/:email", async (req, res) => {
+      const theEmail = req.params.email;
+      // const admin = req.decoded;
+      // console.log(theEmail, admin);
+      // const requestAccount = await userCollection.findOne({ email: admin });
+      // console.log(requestAccount);
+      // if (requestAccount.role === "admin") {
+        console.log(theEmail);
+        const filter = { email: theEmail };
         const updateDoc = {
           $set: { role: "admin" },
         };
         const result = await userCollection.updateOne(filter, updateDoc);
         res.send(result);
-        return
-      }
-      res.status(403).send({ scam: true });
+      //   return;
+      // }
+      // res.status(403).send({ scam: true });
     });
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -188,10 +198,10 @@ const run = async () => {
       const result = await userCollection.deleteOne(filter);
       res.send(result);
     });
-    // getUser by email 
+    // getUser by email
     app.get("/users/:email", async (req, res) => {
-      const email = req.params.email
-      const result = await userCollection.findOne({email: email});
+      const email = req.params.email;
+      const result = await userCollection.findOne({ email: email });
       res.send(result);
     });
   } finally {
