@@ -14,7 +14,6 @@ app.use(cors());
 // middle tiear
 const verifyJWT = (req, res, next) => {
   const authH = req.headers.authorization;
-  console.log(authH);
   if (!authH) {
     return res.status(401).send({ scam: true });
   }
@@ -45,8 +44,17 @@ const run = async () => {
     const userCollection = client.db("tooler").collection("user");
     const reviewCollection = client.db("tooler").collection("review");
 
+    //
+    //
+    //
+    // admin verify 
+    //
+    //
+    //
+
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
+      console.log('admim', requester);
       const requesterAccount = await userCollection.findOne({ email: requester });
       if (requesterAccount.role === 'admin') {
         next();
@@ -65,6 +73,20 @@ const run = async () => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await toolerCollection.findOne(query);
+      res.send(result);
+    });
+    // delete product by id
+    app.delete("/tools/delete/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      console.log(query);
+      const result = await toolerCollection.deleteOne(query);
+      res.send(result);
+    });
+    // add  product
+    app.post("/tools", verifyJWT, verifyAdmin, async (req, res) => {
+      const order = req.body;
+      const result = await toolerCollection.insertOne(order);
       res.send(result);
     });
     // update available quantaty
@@ -114,7 +136,7 @@ const run = async () => {
       const result = await orderCollection.findOne(filter);
       res.send(result);
     });
-    // put
+    // put transation id
     app.put("/order/paid/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -127,6 +149,21 @@ const run = async () => {
         },
       };
       const result = await orderCollection.updateOne(query, updateDoc, option);
+      res.send(result);
+    });
+    // shiped
+    app.put("/order/shiped/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      console.log('dd',query);
+      const option = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: true
+        },
+      };
+      const result = await orderCollection.updateOne(query, updateDoc, option);
+      console.log(result);
       res.send(result);
     });
 
@@ -183,13 +220,15 @@ const run = async () => {
     });
     // set user role
     app.put("/users/role/:email", verifyJWT, verifyAdmin, async (req, res) => {
-      const theEmail = req.params.email;
       const email = req.params.email;
+      console.log(email);
       const filter = { email: email };
+      console.log('Amdin log');
       const updateDoc = {
         $set: { role: "admin" },
       };
       const result = await userCollection.updateOne(filter, updateDoc);
+
       res.send(result);
 
     });
@@ -215,7 +254,7 @@ const run = async () => {
       res.send(result);
     });
     // Delete User
-    app.delete("/users/delete/:email", async (req, res) => {
+    app.delete("/users/delete/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       console.log(email);
       const filter = { email: email };
