@@ -152,7 +152,7 @@ const run = async () => {
       res.send(result);
     });
     // shiped
-    app.put("/order/shiped/:id", verifyJWT, async (req, res) => {
+    app.put("/order/shiped/:id",  async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       console.log('dd',query);
